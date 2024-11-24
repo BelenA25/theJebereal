@@ -20,8 +20,6 @@ sealed class ApiResponse<out T> {
     object Loading : ApiResponse<Nothing>()
 }
 
-
-
 interface AuthService {
     suspend fun login(email: String, password: String): ApiResponse<UserResponse>
     suspend fun logout(userId: Long): ApiResponse<Boolean>
