@@ -1,6 +1,8 @@
 package com.example.myapplication.concertApp
 
+import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,23 +16,31 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,17 +49,31 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role.Companion.Checkbox
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-
-
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ktx.getValue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 
 @Composable
-fun ConcertApp(viewModel: ConcertViewModel, navController: NavHostController) {
+fun ConcertApp(viewModel: FirebaseConcertApi.ConcertViewModel, navController: NavHostController) {
     val popularConcerts by viewModel.popularConcerts.collectAsState()
     val bestOffersConcerts by viewModel.bestOffersConcerts.collectAsState()
     val calendarConcerts by viewModel.calendarConcerts.collectAsState()
@@ -354,7 +378,7 @@ fun ConcertItem(concert: Concert, onClick: (String) -> Unit) {
 
 
 @Composable
-fun ConcertDetailScreen(concertId: String, navController: NavHostController, viewModel: ConcertViewModel) {
+fun ConcertDetailScreen(concertId: String, navController: NavHostController, viewModel: FirebaseConcertApi.ConcertViewModel) {
     val concert by viewModel.loadConcertDetails(concertId).collectAsState(initial = null)
 
     concert?.let {
@@ -379,66 +403,152 @@ fun ConcertDetailScreen(concertId: String, navController: NavHostController, vie
     }
 }
 
-
 @Composable
-fun TicketOptionsScreen(concertId: String, viewModelConcert: ConcertViewModel, onCheckout: (Double) -> Unit) {
+fun TicketOptionsScreen(
+    concertId: String,
+    viewModelConcert: FirebaseConcertApi.ConcertViewModel,
+    navController: NavHostController
+) {
     val tickets by viewModelConcert.loadTicketsForConcert(concertId).collectAsState(initial = emptyList())
 
-    // Estados para el total y la cantidad de tickets seleccionados
-    var totalAmount by remember { mutableStateOf(0.0) }
-    var totalSelectedTickets by remember { mutableStateOf(0) }
+    // Estados para el seguimiento de tickets seleccionados
+    var selectedTickets by remember { mutableStateOf<List<TicketConcert>>(emptyList()) }
+
+    // Estado para manejar la disponibilidad de tickets
+    var areAllTicketsAvailable by remember { mutableStateOf(true) }
+
+    // Contexto para mostrar toast
+    val context = LocalContext.current
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text(text = "Opciones de Tickets para el Concierto ID: $concertId", style = MaterialTheme.typography.titleLarge)
+        Text(
+            text = "Selección de Tickets",
+            style = MaterialTheme.typography.titleLarge
+        )
 
-        // Agrupar por tipo y mostrar la cantidad y precio
+        // Agrupar tickets por tipo
         val groupedTickets = tickets.groupBy { it.type }
 
         groupedTickets.forEach { (type, ticketList) ->
             val availableTickets = ticketList.filter { it.available }
-            if (availableTickets.isNotEmpty()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "$type (${availableTickets.size} disponibles)", style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.width(8.dp))
 
-                    // Botón para seleccionar el tipo de ticket
-                    Button(onClick = {
-                        // Seleccionar un ticket disponible y actualizar el total y la cantidad
-                        val selectedTicket = availableTickets.firstOrNull()
-                        if (selectedTicket != null) {
-                            // Marcar ticket como no disponible y actualizar el estado en el ViewModel
-                            selectedTicket.available = false
-                            totalAmount += selectedTicket.price
-                            totalSelectedTickets += 1
+            // Sección para cada tipo de ticket
+            Text(
+                text = "$type Tickets",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+
+            availableTickets.forEach { ticket ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            // Lógica para seleccionar/deseleccionar ticket
+                            selectedTickets = if (selectedTickets.contains(ticket)) {
+                                selectedTickets.filter { it != ticket }
+                            } else {
+                                selectedTickets + ticket
+                            }
                         }
-                    }) {
-                        Text(text = "Seleccionar")
+                        .background(
+                            color = if (selectedTickets.contains(ticket))
+                                MaterialTheme.colorScheme.primaryContainer
+                            else
+                                Color.Transparent
+                        )
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Asiento ${ticket.seatNumber} - Fila ${ticket.row}",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = "Precio: $${ticket.price}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
+                    Spacer(modifier = Modifier.weight(1f))
+                    Checkbox(
+                        checked = selectedTickets.contains(ticket),
+                        onCheckedChange = {
+                            selectedTickets = if (it) {
+                                selectedTickets + ticket
+                            } else {
+                                selectedTickets.filter { t -> t != ticket }
+                            }
+                        }
+                    )
                 }
-
-                availableTickets.forEach { ticket ->
-                    Text(text = "Asiento ${ticket.seatNumber} - Precio: ${ticket.price}€")
-                }
-            } else {
-                Text(text = "$type (No hay disponibles)")
             }
         }
 
-        // Mostrar el total acumulado y la cantidad de tickets seleccionados al final de la pantalla
+        // Resumen de selección
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Cantidad de tickets seleccionados: $totalSelectedTickets", style = MaterialTheme.typography.bodyLarge)
-        Text(text = "Total acumulado: $totalAmount€", style = MaterialTheme.typography.bodyLarge)
+        Text(
+            text = "Tickets seleccionados: ${selectedTickets.size}",
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Text(
+            text = "Total: $${selectedTickets.sumOf { it.price }}",
+            style = MaterialTheme.typography.bodyLarge
+        )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // Botón de finalizar compra
         Button(
-            onClick = { onCheckout(totalAmount) },
-            enabled = totalSelectedTickets > 0
+            onClick = {
+                if (selectedTickets.isNotEmpty()) {
+                    val checkAvailability = selectedTickets.all { ticket ->
+                        tickets.find { it.idTicket == ticket.idTicket }?.available == true
+                    }
+                    if (checkAvailability) {
+                        // Crear transacción antes de navegar a la pantalla de pago
+                        viewModelConcert.createTransactionForTickets(
+                            concertId = concertId,
+                            selectedTickets = selectedTickets
+                        ) { error ->
+                            if (error == null) {
+                                // Actualizar disponibilidad y navegar
+                                viewModelConcert.updateTicketsAvailability(selectedTickets)
+                                val totalAmount = String.format("%.2f", selectedTickets.sumOf { it.price })
+                                navController.navigate("payment/$totalAmount")
+                                Toast.makeText(
+                                    context,
+                                    "Tickets seleccionados: ${selectedTickets.size}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Error creando transacción: $error",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Algunos tickets no disponibles. Seleccione nuevamente.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        viewModelConcert.loadTicketsForConcert(concertId)
+                        selectedTickets = emptyList()
+                    }
+                }
+            },
+            enabled = selectedTickets.isNotEmpty(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
         ) {
-            Text("Finalizar Compra")
+            Text("Continuar a Pago")
         }
+
     }
 }
-
 @Composable
 fun PaymentScreen(totalAmount: Double, onPay: () -> Unit) {
     var cardNumber by remember { mutableStateOf("") }
@@ -494,3 +604,245 @@ fun PaymentScreen(totalAmount: Double, onPay: () -> Unit) {
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TicketPurchaseScreen(
+    navController: NavHostController
+) {
+    var userTransactions by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
+    var userConcerts by remember { mutableStateOf<List<Concert>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId != null) {
+            // Fetch user's transactions
+            val transactionsSnapshot = FirebaseDatabase.getInstance().reference
+                .child("transactions")
+                .orderByChild("userId")
+                .equalTo(userId)
+                .get().await()
+
+            userTransactions = transactionsSnapshot.children.mapNotNull {
+                it.getValue<Map<String, Any>>()
+            }
+
+            // Fetch unique concert details for these transactions
+            val concertIds = userTransactions.map { it["concertId"] as String }.distinct()
+            userConcerts = concertIds.map { concertId ->
+                FirebaseDatabase.getInstance().reference
+                    .child("concerts")
+                    .child(concertId)
+                    .get().await()
+                    .getValue(Concert::class.java)!!
+            }
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("My Concerts") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        if (userTransactions.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No tickets purchased", style = MaterialTheme.typography.bodyLarge)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                items(userConcerts) { concert ->
+                    val concertTransactions = userTransactions.filter {
+                        it["concertId"] as String == concert.id
+                    }
+
+                    ConcertTicketItem(
+                        concert = concert,
+                        transactionCount = concertTransactions.size,
+                        onConcertClick = {
+                            navController.navigate("purchased_tickets/${concert.id}")
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ConcertTicketItem(
+    concert: Concert,
+    transactionCount: Int,
+    onConcertClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clickable(onClick = onConcertClick)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = concert.name,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = "Date: ${concert.date}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "Tickets Purchased: $transactionCount",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PurchasedTicketsDetailScreen(
+    concertId: String,
+    navController: NavHostController,
+    viewModel: FirebaseConcertApi.ConcertViewModel = hiltViewModel() // Use ViewModel
+) {
+    var purchasedTickets by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
+    var concertDetails by remember { mutableStateOf<Concert?>(null) }
+
+    // Collect tickets and concert details from ViewModel
+    val ticketsForConcert by viewModel.ticketsForConcert.collectAsState()
+    val concertDetail by viewModel.concertDetails.collectAsState()
+
+    LaunchedEffect(concertId) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId != null) {
+            // Load concert details and tickets for this specific concert
+            viewModel.loadConcertDetails(concertId)
+            viewModel.loadTicketsForConcert(concertId)
+
+            // Fetch transactions for this concert and user
+            val ticketsSnapshot = FirebaseDatabase.getInstance().reference
+                .child("transactions")
+                .orderByChild("userId")
+                .equalTo(userId)
+                .get().await()
+
+            purchasedTickets = ticketsSnapshot.children
+                .mapNotNull { it.getValue<Map<String, Any>>() }
+                .filter { it["concertId"] as String == concertId }
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Concert Tickets") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        if (purchasedTickets.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No tickets found", style = MaterialTheme.typography.bodyLarge)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                item {
+                    concertDetail?.let { concert ->
+                        Text(
+                            text = concert.name,
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                        Text(
+                            text = "Date: ${concert.date}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+                }
+
+                items(purchasedTickets) { transaction ->
+                    // Find the corresponding ticket details
+                    val ticketDetails = ticketsForConcert.find {
+                        it.idTicket == transaction["ticketId"]
+                    }
+
+                    // Pass ticket details to TicketDetailItem
+                    TicketDetailItem(transaction, ticketDetails)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TicketDetailItem(
+    transaction: Map<String, Any>,
+    ticket: TicketConcert?
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Ticket ID
+            Text(
+                text = "Ticket ID: ${transaction["ticketId"]}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            // Price
+            Text(
+                text = "Price: $${transaction["amount"]}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            // Seat Number
+            Text(
+                text = "Seat Number: ${ticket?.seatNumber ?: "Not available"}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            // Row
+            Text(
+                text = "Row: ${ticket?.row ?: "Not available"}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            // Type
+            Text(
+                text = "Type: ${ticket?.type ?: "Not available"}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}

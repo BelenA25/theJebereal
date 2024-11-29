@@ -1,5 +1,7 @@
 package com.example.myapplication.di
 
+import com.example.myapplication.concertApp.ConcertApi
+import com.example.myapplication.concertApp.FirebaseConcertApi
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -20,12 +22,16 @@ import com.example.myapplication.domain.use_cases.users.GetUserById
 import com.example.myapplication.domain.use_cases.users.SaveImage
 import com.example.myapplication.domain.use_cases.users.Update
 import com.example.myapplication.domain.use_cases.users.UsersUseCases
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ktx.database
 import com.login.jetpackcompose.core.Constants.USERS
+import dagger.Binds
 
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
 @Module
@@ -68,5 +74,22 @@ object AppModule {
         update = Update(repository),
         saveImage = SaveImage(repository)
     )
+
+    @Module
+    @InstallIn(SingletonComponent::class) // Change from ViewModelComponent to SingletonComponent
+    abstract class ConcertApiModule {
+        @Binds
+        abstract fun bindConcertApi(
+            firebaseConcertApi: FirebaseConcertApi
+        ): ConcertApi
+
+        companion object {
+            @Provides
+            @Singleton
+            fun provideFirebaseDatabase(): FirebaseDatabase {
+                return Firebase.database
+            }
+        }
+    }
 
 }
