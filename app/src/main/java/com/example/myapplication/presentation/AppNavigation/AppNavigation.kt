@@ -30,6 +30,7 @@ import com.example.myapplication.concertApp.FirebaseConcertApi
 
 import com.example.myapplication.concertApp.PaymentScreen
 import com.example.myapplication.concertApp.PurchasedTicketsDetailScreen
+import com.example.myapplication.concertApp.SearchScreen
 import com.example.myapplication.concertApp.TicketOptionsScreen
 import com.example.myapplication.concertApp.TicketPurchaseScreen
 import com.example.myapplication.presentation.screens.login.LoginScreen
@@ -56,7 +57,7 @@ fun MainNavigation(navController: NavHostController) {
                 HomeScreen(navController)
             }
             composable(NavigationItem.Search.route) {
-                //SearchScreen()
+                SearchScreenAll(navController = navController)
             }
             composable(NavigationItem.Tickets.route) {
                 TicketsScreen(navController)
@@ -78,9 +79,10 @@ fun HomeScreen(navController: NavHostController) {
 }
 
 @Composable
-fun SearchScreen(navController: NavHostController) {
+fun SearchScreenAll(navController: NavHostController) {
     // Aquí puedes poner el contenido para la pantalla de búsqueda
-    Text("Search Screen")
+    //Text("Search Screen")
+    SearchScreen(navController = navController)
 }
 
 @Composable
@@ -193,3 +195,7 @@ fun AppNavigation(navController: NavHostController) {
         }
     }
 }
+
+
+
+
