@@ -26,10 +26,13 @@ import com.example.myapplication.BottomNavigationBar
 import com.example.myapplication.NavigationItem
 import com.example.myapplication.concertApp.ConcertApp
 import com.example.myapplication.concertApp.ConcertDetailScreen
+import com.example.myapplication.concertApp.FirebaseConcertApi
 
-import com.example.myapplication.concertApp.ConcertViewModel
 import com.example.myapplication.concertApp.PaymentScreen
+import com.example.myapplication.concertApp.PurchasedTicketsDetailScreen
+import com.example.myapplication.concertApp.SearchScreen
 import com.example.myapplication.concertApp.TicketOptionsScreen
+import com.example.myapplication.concertApp.TicketPurchaseScreen
 import com.example.myapplication.presentation.screens.login.LoginScreen
 import com.example.myapplication.presentation.screens.login.LoginViewModel
 import com.example.myapplication.presentation.screens.profile.ProfileScreen
@@ -54,10 +57,10 @@ fun MainNavigation(navController: NavHostController) {
                 HomeScreen(navController)
             }
             composable(NavigationItem.Search.route) {
-                //SearchScreen()
+                SearchScreenAll(navController = navController)
             }
             composable(NavigationItem.Tickets.route) {
-                //TicketsScreen()
+                TicketsScreen(navController)
             }
             composable(NavigationItem.Profile.route) {
                 ProfileScreenNav(navController)
@@ -76,15 +79,18 @@ fun HomeScreen(navController: NavHostController) {
 }
 
 @Composable
-fun SearchScreen(navController: NavHostController) {
+fun SearchScreenAll(navController: NavHostController) {
     // Aquí puedes poner el contenido para la pantalla de búsqueda
-    Text("Search Screen")
+    //Text("Search Screen")
+    SearchScreen(navController = navController)
 }
 
 @Composable
 fun TicketsScreen(navController: NavHostController) {
     // Aquí puedes poner el contenido para la pantalla de tickets
-    Text("Tickets Screen")
+    //Text("Tickets Screen")
+   // Text("hello world")
+   TicketPurchaseScreen(navController)
 }
 
 @Composable
@@ -100,7 +106,7 @@ fun ProfileScreenNav(navController: NavHostController) {
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
-    val viewModelConcert: ConcertViewModel = hiltViewModel()
+    val viewModelConcert: FirebaseConcertApi.ConcertViewModel = hiltViewModel()
     val loginViewModel: LoginViewModel = hiltViewModel()
     val currentUser = loginViewModel.currentUser
 
@@ -154,9 +160,7 @@ fun AppNavigation(navController: NavHostController) {
             TicketOptionsScreen(
                 concertId = concertId,
                 viewModelConcert = viewModelConcert,
-                onCheckout = { totalAmount ->
-                    navController.navigate("payment/$totalAmount")
-                }
+                navController
             )
         }
 
@@ -176,5 +180,22 @@ fun AppNavigation(navController: NavHostController) {
                 }
             )
         }
+
+
+        // In AppNavigation
+        composable(
+            route = "purchased_tickets/{concertId}",
+            arguments = listOf(navArgument("concertId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val concertId = backStackEntry.arguments?.getString("concertId") ?: return@composable
+            PurchasedTicketsDetailScreen(
+                concertId = concertId,
+                navController = navController
+            )
+        }
     }
 }
+
+
+
+

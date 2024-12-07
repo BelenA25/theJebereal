@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
+   // implementation(libs.firebase.database)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -83,12 +84,14 @@ dependencies {
     // Hilt Navigation ViewModel
     implementation(libs.androidx.hilt.navigation.compose)
 
-    // FIREBASE
-    implementation(platform("com.google.firebase:firebase-bom:31.0.2"))
+    implementation(platform("com.google.firebase:firebase-bom:32.1.1")) // Usa la última versión estable
+
+    // Dependencias de Firebase (sin versiones específicas)
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-database-ktx")
 
     implementation("com.google.code.gson:gson:2.9.0")
 

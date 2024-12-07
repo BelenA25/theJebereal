@@ -80,7 +80,6 @@ import com.example.myapplication.presentation.AppNavigation.AppNavigation
 import com.example.myapplication.UserApp.LoginUiState
 import com.example.myapplication.UserApp.UserSessionViewModel
 import com.example.myapplication.concertApp.Concert
-import com.example.myapplication.concertApp.ConcertViewModel
 import com.example.myapplication.presentation.components.DefaultTopBar
 
 import com.example.myapplication.ui.theme.MyApplicationTheme
@@ -91,20 +90,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var navController: NavHostController
 
-    private val viewModel: UserSessionViewModel by viewModels {
-        object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return UserSessionViewModel(application) as T
-            }
-        }
-    }
-    private val viewModelConcert: ConcertViewModel by viewModels {
-        object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return ConcertViewModel() as T
-            }
-        }
-    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
