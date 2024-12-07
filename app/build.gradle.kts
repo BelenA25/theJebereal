@@ -91,6 +91,8 @@ dependencies {
     implementation("com.google.firebase:firebase-storage-ktx")
 
     implementation("com.google.code.gson:gson:2.9.0")
+    implementation ("io.coil-kt:coil-compose:2.4.0")
+
 
 
 }

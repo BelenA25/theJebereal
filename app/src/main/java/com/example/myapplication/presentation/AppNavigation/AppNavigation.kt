@@ -30,6 +30,7 @@ import com.example.myapplication.concertApp.ConcertDetailScreen
 import com.example.myapplication.concertApp.ConcertViewModel
 import com.example.myapplication.concertApp.PaymentScreen
 import com.example.myapplication.concertApp.TicketOptionsScreen
+import com.example.myapplication.presentation.screens.PaginaPrincipal.WelcomeScreen
 import com.example.myapplication.presentation.screens.login.LoginScreen
 import com.example.myapplication.presentation.screens.login.LoginViewModel
 import com.example.myapplication.presentation.screens.profile.ProfileScreen
@@ -108,13 +109,16 @@ fun AppNavigation(navController: NavHostController) {
     val startDestination = if (currentUser != null) {
         AppScreen.Main.route // Usuario logueado
     } else {
-        AppScreen.Login.route // Usuario no logueado
+        AppScreen.Welcome.route // Usuario no logueado
     }
 
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
+        composable(route = AppScreen.Welcome.route) {
+            WelcomeScreen(navController)
+        }
         // Pantallas principales
         composable(route = AppScreen.Login.route) {
             LoginScreen(navController)
