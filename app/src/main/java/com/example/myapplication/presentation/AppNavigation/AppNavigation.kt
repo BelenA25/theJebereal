@@ -32,11 +32,8 @@ import com.example.myapplication.concertApp.PaymentScreen
 import com.example.myapplication.concertApp.PurchasedTicketsDetailScreen
 import com.example.myapplication.concertApp.SearchScreen
 import com.example.myapplication.concertApp.TicketOptionsScreen
-<<<<<<< HEAD
 import com.example.myapplication.concertApp.TicketPurchaseScreen
-=======
 import com.example.myapplication.presentation.screens.PaginaPrincipal.WelcomeScreen
->>>>>>> UI
 import com.example.myapplication.presentation.screens.login.LoginScreen
 import com.example.myapplication.presentation.screens.login.LoginViewModel
 import com.example.myapplication.presentation.screens.profile.ProfileScreen

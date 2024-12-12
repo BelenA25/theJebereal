@@ -64,7 +64,9 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
-   // implementation(libs.firebase.database)
+    implementation(libs.androidx.ui.text.google.fonts)
+
+    // implementation(libs.firebase.database)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -85,6 +87,7 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
 
     implementation(platform("com.google.firebase:firebase-bom:32.1.1")) // Usa la última versión estable
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.6.8")
 
     // Dependencias de Firebase (sin versiones específicas)
     implementation("com.google.firebase:firebase-analytics-ktx")
@@ -95,7 +98,6 @@ dependencies {
 
     implementation("com.google.code.gson:gson:2.9.0")
     implementation ("io.coil-kt:coil-compose:2.4.0")
-
-
+    implementation ("androidx.compose.material:material-icons-extended:1.4.0")
 
 }

@@ -3,6 +3,7 @@ package com.example.myapplication.concertApp
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -24,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
@@ -49,10 +52,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role.Companion.Checkbox
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -70,6 +75,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import androidx.compose.material.icons.filled.MusicNote
 
 
 @Composable
@@ -145,16 +151,6 @@ fun ConcertApp(viewModel: FirebaseConcertApi.ConcertViewModel, navController: Na
                     navController.navigate("concert_detail/$concertId")
                 }
             )
-
-            /*calendarConcerts.forEach { concert ->
-                ConcertItem(
-                    concert = concert,
-                    onClick = { concertId ->
-                        navController.navigate("concert_detail/$concertId")
-                    },
-
-                )
-            }*/
 
             // Espacio adicional al final para evitar que el último elemento
             // quede oculto por la barra de navegación
@@ -234,59 +230,83 @@ fun ConcertItemCalendar(
         modifier = modifier
             .clickable { onClick(concert.id) }
             .padding(vertical = 4.dp)
+            .border(2.dp, Color.Black, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .height(130.dp)
         ) {
-            // Imagen del concierto
             AsyncImage(
                 model = concert.imageUrl,
                 contentDescription = "Imagen de ${concert.name}",
                 modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Crop
             )
 
-            // Información del concierto
-            Column(
+            Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 16.dp)
-            ) {
-                Text(
-                    text = concert.name,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = "Fecha: ${concert.date}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = "Género: ${concert.genre}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            // Precio y descuento
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
-                Text(
-                    text = "$${concert.price}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                concert.discount?.let {
-                    Text(
-                        text = "-$it%",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Blue
+                            )
+                        )
                     )
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .align(Alignment.BottomStart)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 16.dp)
+                        .wrapContentHeight(Alignment.Bottom)
+                ) {
+                    Text(
+                        text = concert.name,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = concert.date,
+                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black)
+                    )
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MusicNote,
+                        contentDescription = "Género del concierto",
+                        tint = Color.Black,
+                        modifier = Modifier.size(24.dp)
+                    )
+
+                    Text(
+                        text = "$${concert.price}",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    concert.discount?.let {
+                        Text(
+                            text = "-$it%",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
         }
@@ -330,48 +350,81 @@ fun ConcertItem(concert: Concert, onClick: (String) -> Unit) {
             .width(250.dp)
             .padding(horizontal = 8.dp)
             .clickable { onClick(concert.id) }
+            .border(2.dp, Color.Black, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
+                .fillMaxSize()
         ) {
-            Text(
-                text = concert.name,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = "Género: ${concert.genre}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Fecha: ${concert.date}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Precio: $${concert.price}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            concert.discount?.let {
-                Text(
-                    text = "Descuento: $it%",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Imagen con Coil
             AsyncImage(
                 model = concert.imageUrl,
                 contentDescription = "Imagen de ${concert.name}",
                 modifier = Modifier
-                    .height(120.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(4.dp)),
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Crop
             )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .align(Alignment.BottomStart)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Red.copy(alpha = 1f)
+                            )
+                        )
+                    )
+            )
+
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.BottomStart)
+            ) {
+                Text(
+                    text = concert.date,
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.White)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = concert.name,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.MusicNote,
+                        contentDescription = "Género de música",
+                        modifier = Modifier.size(20.dp),
+                        tint = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = concert.genre,
+                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.White)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = "$${concert.price}",
+                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.White)
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                concert.discount?.let {
+                    Text(
+                        text = "Descuento: $it%",
+                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.White)
+                    )
+                }
+            }
         }
     }
 }

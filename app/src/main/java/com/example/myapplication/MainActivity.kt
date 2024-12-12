@@ -111,8 +111,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(navController: NavHostController) {
     Scaffold(
-
         content = {
+
             AppNavigation(navController = navController)
         }
     )
