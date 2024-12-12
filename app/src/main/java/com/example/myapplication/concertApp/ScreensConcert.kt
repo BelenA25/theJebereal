@@ -2,6 +2,7 @@ package com.example.myapplication.concertApp
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -219,99 +220,150 @@ fun ExpandableConcertList(
         }
     }
 }
-
 @Composable
 fun ConcertItemCalendar(
     concert: Concert,
     onClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    Row(
         modifier = modifier
             .clickable { onClick(concert.id) }
             .padding(vertical = 4.dp)
-            .border(2.dp, Color.Black, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
     ) {
-        Box(
+        val date = concert.date.split("-")
+        val day = date.getOrNull(2) ?: ""
+        val month = when (date.getOrNull(1)) {
+            "01" -> "Enero"
+            "02" -> "Febrero"
+            "03" -> "Marzo"
+            "04" -> "Abril"
+            "05" -> "Mayo"
+            "06" -> "Junio"
+            "07" -> "Julio"
+            "08" -> "Agosto"
+            "09" -> "Septiembre"
+            "10" -> "Octubre"
+            "11" -> "Noviembre"
+            "12" -> "Diciembre"
+            else -> ""
+        }
+
+        Card(
             modifier = Modifier
-                .fillMaxWidth()
+                .width(80.dp)
                 .height(130.dp)
+                .padding(end = 16.dp),
+            shape = RoundedCornerShape(8.dp),
+            border = BorderStroke(2.dp, Color.Black),
         ) {
-            AsyncImage(
-                model = concert.imageUrl,
-                contentDescription = "Imagen de ${concert.name}",
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(16.dp)),
-                contentScale = ContentScale.Crop
-            )
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = day,
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = month,
+                    style = MaterialTheme.typography.bodySmall.copy(color = Color.Black)
+                )
+            }
+        }
 
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .padding(vertical = 8.dp),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(2.dp, Color.Black)
+        ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Blue
+                    .fillMaxWidth()
+                    .height(130.dp)
+            ) {
+                AsyncImage(
+                    model = concert.imageUrl,
+                    contentDescription = "Imagen de ${concert.name}",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp)),
+                    contentScale = ContentScale.Crop
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color.White
+                                )
                             )
                         )
-                    )
-            )
+                )
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .align(Alignment.BottomStart)
-            ) {
-                Column(
+                Row(
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 16.dp)
-                        .wrapContentHeight(Alignment.Bottom)
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .align(Alignment.BottomStart)
                 ) {
-                    Text(
-                        text = concert.name,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = concert.date,
-                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black)
-                    )
-                }
-
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.Bottom
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MusicNote,
-                        contentDescription = "Género del concierto",
-                        tint = Color.Black,
-                        modifier = Modifier.size(24.dp)
-                    )
-
-                    Text(
-                        text = "$${concert.price}",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    concert.discount?.let {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 16.dp)
+                            .wrapContentHeight(Alignment.Bottom)
+                    ) {
                         Text(
-                            text = "-$it%",
-                            style = MaterialTheme.typography.bodyMedium
+                            text = concert.name,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = concert.date,
+                            style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black)
+                        )
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.Bottom
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MusicNote,
+                            contentDescription = "Género del concierto",
+                            tint = Color.Black,
+                            modifier = Modifier.size(24.dp)
+                        )
+
+                        Text(
+                            text = "$${concert.price}",
+                            style = MaterialTheme.typography.titleMedium.copy(color = Color.Black)
+                        )
+                        concert.discount?.let {
+                            Text(
+                                text = "-$it%",
+                                style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black)
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun SectionTitle(title: String) {
