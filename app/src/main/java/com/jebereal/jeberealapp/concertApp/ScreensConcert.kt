@@ -73,6 +73,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.style.TextAlign
 import coil.compose.rememberImagePainter
+import com.jebereal.jeberealapp.util.showNotification
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -809,6 +810,7 @@ fun PaymentScreen(totalAmount: Double, onPay: () -> Unit) {
 
         Button(
             onClick = {
+                showNotification(context)
                 // Mostrar un toast con el monto total y el mensaje "Success"
                 Toast.makeText(context, "Success! Total: $$totalAmount", Toast.LENGTH_LONG).show()
                 onPay()
