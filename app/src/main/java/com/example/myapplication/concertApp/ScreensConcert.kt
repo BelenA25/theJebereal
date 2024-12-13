@@ -3,6 +3,7 @@ package com.example.myapplication.concertApp
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -77,7 +80,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import androidx.compose.material.icons.filled.MusicNote
-
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.text.style.TextAlign
+import coil.compose.rememberImagePainter
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun ConcertApp(viewModel: FirebaseConcertApi.ConcertViewModel, navController: NavHostController) {
@@ -480,33 +488,147 @@ fun ConcertItem(concert: Concert, onClick: (String) -> Unit) {
         }
     }
 }
-
+fun formatDate(dateString: String): String {
+    // Suponiendo que la fecha está en formato "YYYY-MM-DD" como en el ejemplo 2024-09-10
+    val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val outputFormat = SimpleDateFormat("d 'de' MMMM 'de' yyyy", Locale("es", "ES"))
+    val date = inputFormat.parse(dateString)
+    return outputFormat.format(date)
+}
 
 @Composable
 fun ConcertDetailScreen(concertId: String, navController: NavHostController, viewModel: FirebaseConcertApi.ConcertViewModel) {
     val concert by viewModel.loadConcertDetails(concertId).collectAsState(initial = null)
 
     concert?.let {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = it.name, style = MaterialTheme.typography.titleLarge)
-            Text(text = "Fecha: ${it.date}")
-            Text(text = "Descripción: ${it.venue}")
+            Image(
+                painter = rememberImagePainter(it.imageUrl),
+                contentDescription = "Imagen de fondo",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.7f)
+                    .clip(RectangleShape),
+                contentScale = ContentScale.Crop
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .background(Color(0xFFD1C171))
+                    .padding(16.dp)
+                    .height(400.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    Text(
+                        text = it.name,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            textAlign = TextAlign.Start
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    val formattedDate = formatDate(it.date)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Fecha",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = formattedDate,
+                            style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
+                            textAlign = TextAlign.Start
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            Button(onClick = {
-                navController.navigate("ticket_options/$concertId")
-            }) {
-                Text("Comprar Entrada")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.MusicNote,
+                            contentDescription = "Género",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "El género del concierto es: ${it.genre}",
+                            style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
+                            textAlign = TextAlign.Start
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.AttachMoney,
+                            contentDescription = "Precio",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "$${it.price}",
+                            style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
+                            textAlign = TextAlign.Start
+                        )
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(35.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "$${it.price}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                    )
+                    Button(
+                        onClick = {
+                            navController.navigate("ticket_options/$concertId")
+                        },
+                        shape = RoundedCornerShape(50.dp),
+                        modifier = Modifier
+                            .width(200.dp)
+                            .height(50.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                        border = BorderStroke(2.dp, Color.Black)
+                    ) {
+                        Text(
+                            text = "Comprar Entrada",
+                            style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black)
+                        )
+                    }
+                }
             }
         }
     } ?: run {
         CircularProgressIndicator()
-    }
+        }
 }
+
 
 @Composable
 fun TicketOptionsScreen(
