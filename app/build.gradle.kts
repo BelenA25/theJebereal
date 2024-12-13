@@ -10,15 +10,15 @@ plugins {
 }
 
 android {
-    namespace = "com.example.myapplication"
+    namespace = "com.jebereal.jeberealapp"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.myapplication"
+        applicationId = "com.jebereal.jeberealapp"
         minSdk = 31
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
