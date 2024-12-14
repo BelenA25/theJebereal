@@ -10,8 +10,10 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -73,6 +75,7 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
@@ -640,11 +643,9 @@ fun TicketOptionsScreen(
     // Estados para el seguimiento de tickets seleccionados
     var selectedTickets by remember { mutableStateOf<List<TicketConcert>>(emptyList()) }
 
-    // Estado para manejar la disponibilidad de tickets
-    var areAllTicketsAvailable by remember { mutableStateOf(true) }
-
     // Contexto para mostrar toast
     val context = LocalContext.current
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -656,142 +657,133 @@ fun TicketOptionsScreen(
                 }
             )
         }
-    ) { paddingValues -> // Aquí cambiamos `padding` por `paddingValues`
+    ) { padding ->
 
-        // Agregamos el padding extra al contenido para que no se sobreponga con el TopAppBar
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    top = paddingValues.calculateTopPadding() + 16.dp, // Aquí sumamos un padding extra
-                    start = 16.dp,
-                    end = 16.dp
-                )
+                //.padding(padding) // Asegura que el contenido no invada el área del TopAppBar
         ) {
-            // Agrupar tickets por tipo
-            val groupedTickets = tickets.groupBy { it.type }
+            // Row1: Imagen y Cards
+            val configuration = LocalConfiguration.current
+            val screenWidth = configuration.screenWidthDp.dp
+            val imageWidth = screenWidth * 0.4f // 40% del ancho
+            val imageHeight = imageWidth * 4f // Alto proporcional para mejorar visibilidad
 
-            groupedTickets.forEach { (type, ticketList) ->
-                val availableTickets = ticketList.filter { it.available }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth().padding(end = 16.dp)
+                    .height(imageHeight), // Altura del Row
 
-                // Sección para cada tipo de ticket
-                Text(
-                    text = "$type Tickets",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 16.dp)
+                verticalAlignment = Alignment.CenterVertically // Centrado vertical del contenido
+            ) {
+                // Imagen ajustada al 40% del ancho de la pantalla, con altura proporcional
+                Image(
+                    painter = painterResource(id = R.drawable.seats), // Cambia por tu recurso
+                    contentDescription = "Imagen del concierto",
+                    modifier = Modifier
+                        .width(imageWidth) // 40% del ancho de la pantalla
+                        .height(imageHeight) // Ajuste proporcional para altura
+                        .align(Alignment.CenterVertically), // Centra la imagen dentro del Row
+                    contentScale = ContentScale.Fit // Mantiene la proporción original
                 )
 
-                availableTickets.forEach { ticket ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                            .clickable {
-                                // Lógica para seleccionar/deseleccionar ticket
-                                selectedTickets = if (selectedTickets.contains(ticket)) {
-                                    selectedTickets.filter { it != ticket }
-                                } else {
-                                    selectedTickets + ticket
-                                }
-                            }
-                            .background(
-                                color = if (selectedTickets.contains(ticket))
+                // Contenido a la derecha (Column con las tarjetas)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp) // Espacio entre la imagen y las tarjetas
+                ) {
+                    tickets.forEach { ticket ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 30.dp)
+                                .clickable {
+                                    selectedTickets = if (selectedTickets.contains(ticket)) {
+                                        selectedTickets.filter { it != ticket }
+                                    } else {
+                                        selectedTickets + ticket
+                                    }
+                                },
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (selectedTickets.contains(ticket))
                                     MaterialTheme.colorScheme.primaryContainer
                                 else
-                                    Color.Transparent
+                                    MaterialTheme.colorScheme.surface
                             )
-                            .padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "Asiento ${ticket.seatNumber} - Fila ${ticket.row}",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                text = "Precio: $${ticket.price}",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                        Spacer(modifier = Modifier.weight(1f))
-                        Checkbox(
-                            checked = selectedTickets.contains(ticket),
-                            onCheckedChange = {
-                                selectedTickets = if (it) {
-                                    selectedTickets + ticket
-                                } else {
-                                    selectedTickets.filter { t -> t != ticket }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = "Tipo: ${ticket.type}",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    Text(
+                                        text = "Asiento ${ticket.seatNumber} - Fila ${ticket.row}",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        text = "Precio: $${ticket.price}",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
                                 }
+                                Checkbox(
+                                    checked = selectedTickets.contains(ticket),
+                                    onCheckedChange = {
+                                        selectedTickets = if (it) {
+                                            selectedTickets + ticket
+                                        } else {
+                                            selectedTickets.filter { t -> t != ticket }
+                                        }
+                                    }
+                                )
                             }
-                        )
+                        }
                     }
                 }
             }
 
-            // Resumen de selección
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Tickets seleccionados: ${selectedTickets.size}",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Text(
-                text = "Total: $${selectedTickets.sumOf { it.price }}",
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            // Botón de finalizar compra
-            Button(
-                onClick = {
-                    if (selectedTickets.isNotEmpty()) {
-                        val checkAvailability = selectedTickets.all { ticket ->
-                            tickets.find { it.idTicket == ticket.idTicket }?.available == true
-                        }
-                        if (checkAvailability) {
-                            // Crear transacción antes de navegar a la pantalla de pago
-                            viewModelConcert.createTransactionForTickets(
-                                concertId = concertId,
-                                selectedTickets = selectedTickets
-                            ) { error ->
-                                if (error == null) {
-                                    // Actualizar disponibilidad y navegar
-                                    viewModelConcert.updateTicketsAvailability(selectedTickets)
-                                    val totalAmount = String.format("%.2f", selectedTickets.sumOf { it.price })
-                                    navController.navigate("payment/$totalAmount")
-                                    Toast.makeText(
-                                        context,
-                                        "Tickets seleccionados: ${selectedTickets.size}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Error creando transacción: $error",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
-                        } else {
-                            Toast.makeText(
-                                context,
-                                "Algunos tickets no disponibles. Seleccione nuevamente.",
-                                Toast.LENGTH_LONG
-                            ).show()
-                            viewModelConcert.loadTicketsForConcert(concertId)
-                            selectedTickets = emptyList()
-                        }
-                    }
-                },
-                enabled = selectedTickets.isNotEmpty(),
+            // Botón1: Información de tickets seleccionados y botón
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp)
+                    .padding(16.dp)
             ) {
-                Text("Continuar a Pago")
-            }
+                Text(
+                    text = "Tickets seleccionados: ${selectedTickets.size}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = "Total: $${selectedTickets.sumOf { it.price }}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
 
+                Button(
+                    onClick = {
+                        // Lógica para manejar el botón de compra
+                    },
+                    enabled = selectedTickets.isNotEmpty(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                ) {
+                    Text("Continuar a Pago")
+                }
+            }
         }
     }
 }
+
+
+
+
 
 
 
