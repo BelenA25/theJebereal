@@ -70,12 +70,19 @@ import com.google.firebase.database.ktx.getValue
 import kotlinx.coroutines.tasks.await
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import coil.compose.rememberImagePainter
+import com.jebereal.jeberealapp.R
 import com.jebereal.jeberealapp.util.showNotification
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
+
 
 @Composable
 fun ConcertApp(viewModel: FirebaseConcertApi.ConcertViewModel, navController: NavHostController) {
@@ -766,6 +773,8 @@ fun TicketOptionsScreen(
 
     }
 }
+
+
 @Composable
 fun PaymentScreen(totalAmount: Double, onPay: () -> Unit) {
     var cardNumber by remember { mutableStateOf("") }
@@ -826,10 +835,14 @@ fun PaymentScreen(totalAmount: Double, onPay: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TicketPurchaseScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: FirebaseConcertApi.ConcertViewModel = hiltViewModel() // Usamos el ViewModel
 ) {
     var userTransactions by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
     var userConcerts by remember { mutableStateOf<List<Concert>>(emptyList()) }
+
+    // Obtener los tickets desde el ViewModel
+    val ticketsForConcert by viewModel.ticketsForConcert.collectAsState()
 
     LaunchedEffect(Unit) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
@@ -857,79 +870,291 @@ fun TicketPurchaseScreen(
         }
     }
 
+    // Cambiar el degradado dependiendo de si hay tickets o no
+    val gradientBrush = if (userTransactions.isEmpty()) {
+        Brush.linearGradient(
+            colors = listOf(Color(0xFF6F4F28), Color.White) // Degradado café a blanco
+        )
+    } else {
+        Brush.linearGradient(
+            colors = listOf(Color(0xFFC94140), Color.White) // Degradado de #C94140 a blanco
+        )
+    }
+
+    // Scaffold con el degradado dinámico
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("My Concerts") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(
+                            "My Concerts",
+                            color = Color.White // Color blanco para el título
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigateUp() }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White // Color blanco para la flecha
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent // Hacemos el fondo del TopAppBar transparente
+                    ),
+                    modifier = Modifier.background(Color.Transparent) // Asegura que el TopAppBar no tenga fondo
+                )
+            }
+        },
+        containerColor = Color.Transparent, // Fondo transparente para el Scaffold
+        modifier = Modifier.background( // Aplica el degradado al fondo general del Scaffold
+            gradientBrush
+        )
     ) { padding ->
         if (userTransactions.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding),
+                    .padding(padding)
+                    .background(Color.Transparent), // Degradado café a blanco
                 contentAlignment = Alignment.Center
             ) {
-                Text("No tickets purchased", style = MaterialTheme.typography.bodyLarge)
+                // Imagen centrada en la parte superior
+                Image(
+                    painter = painterResource(id = R.drawable.no_tickets_purchased), // Reemplaza con el nombre de tu archivo PNG
+                    contentDescription = "Imagen",
+                    modifier = Modifier
+                        .align(Alignment.TopCenter) // Centra la imagen en la parte superior
+                        .size(400.dp) // Tamaño de la imagen (ajústalo según tus necesidades)
+                )
+
+                // Coloca el texto debajo de la imagen
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally, // Centra los textos horizontalmente
+                    verticalArrangement = Arrangement.Center // Centra los textos verticalmente
+                ) {
+                    Text(
+                        "No tickets purchased",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Bold, // Texto en negrita
+                            fontSize = 24.sp // Tamaño de texto más grande
+                        ),
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+                    Text(
+                        "It looks like you haven't bought any tickets yet, don't you want to buy one?",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Normal, // Texto normal
+                            fontSize = 16.sp, // Tamaño de texto más pequeño
+                            textAlign = TextAlign.Center
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth() // Permite que el texto ocupe todo el ancho disponible
+                            .padding(start = 30.dp, end = 30.dp, top = 15.dp) // Padding a los costados y arriba
+                    )
+                }
             }
         } else {
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                items(userConcerts) { concert ->
-                    val concertTransactions = userTransactions.filter {
-                        it["concertId"] as String == concert.id
-                    }
+                // Subtítulo centrado, en negrita, blanco y tamaño grande
+                Text(
+                    "Your next concerts",
+                    color = Color.White, // Color blanco
+                    fontWeight = FontWeight.Medium, // Negrita
+                    fontSize = 26.sp, // Tamaño grande
+                    modifier = Modifier
+                        .fillMaxWidth() // Hace que ocupe todo el ancho disponible
+                        .padding(top = 20.dp), // Espacio arriba del subtítulo
+                    textAlign = TextAlign.Center // Centra el texto horizontalmente
+                )
 
-                    ConcertTicketItem(
-                        concert = concert,
-                        transactionCount = concertTransactions.size,
-                        onConcertClick = {
-                            navController.navigate("purchased_tickets/${concert.id}")
+                // Lista de conciertos debajo del subtítulo
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth() // Ocupa solo el ancho disponible
+                        .padding(top = 16.dp) // Espacio arriba de la lista
+                ) {
+                    items(userConcerts) { concert ->
+                        val concertTransactions = userTransactions.filter {
+                            it["concertId"] as String == concert.id
                         }
-                    )
+
+                        ConcertTicketItem(
+                            concert = concert,
+                            transaction = concertTransactions.first(), // Pasa la transacción relevante
+                            ticketsForConcert = ticketsForConcert, // Pasa la lista de tickets
+                            onConcertClick = {
+                                navController.navigate("purchased_tickets/${concert.id}")
+                            }
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+
+
 @Composable
 fun ConcertTicketItem(
     concert: Concert,
-    transactionCount: Int,
+    transaction: Map<String, Any>,
+    ticketsForConcert: List<TicketConcert>,
     onConcertClick: () -> Unit
 ) {
+    // Card principal transparente
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable(onClick = onConcertClick)
+            .clickable(onClick = onConcertClick),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent) // Transparente
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = concert.name,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = "Date: ${concert.date}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Tickets Purchased: $transactionCount",
-                style = MaterialTheme.typography.bodyMedium
-            )
+            // Subcard 1 ancho reducido
+            val subCard1Width = 90.dp // Ancho fijo para la subcard 1
+            // Mes centrado encima de la subcard 1 y alineado a la izquierda
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Start) // Alineación a la izquierda
+                    .width(subCard1Width) // Ancho igual al de la subcard 1
+                    .padding(start = 10.dp, bottom = 10.dp) // Aumenta el bottom padding para mayor separación
+            ) {
+                Text(
+                    text = concert.date.formatMonth(),
+                    style = TextStyle(
+                        color = Color.White,
+                        fontSize = 15.sp, // Más pequeño
+                        fontWeight = FontWeight.Normal // Sin negrita
+                    ),
+                    textAlign = TextAlign.Start, // Alineado a la izquierda
+                    modifier = Modifier.fillMaxWidth() // Asegura que ocupe todo el ancho disponible
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp) // Espacio dentro de la card
+            ) {
+                // Subtarjeta 1: Día y día de la semana
+                Card(
+                    modifier = Modifier
+                        .width(56.dp)
+                        .height(60.dp) // Asegura suficiente altura para los textos
+                        .padding(end = 8.dp), // Espacio entre las subcards
+                    shape = RoundedCornerShape(8.dp), // Bordes redondeados
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Sin elevación
+                    colors = CardDefaults.cardColors(containerColor = Color.White) // Fondo blanco
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp), // Reducir padding interno
+                        horizontalAlignment = Alignment.CenterHorizontally, // Centrado horizontalmente
+                        verticalArrangement = Arrangement.Center // Centrado verticalmente
+                    ) {
+                        Text(
+                            text = concert.date.formatDay(),
+                            style = MaterialTheme.typography.displayMedium.copy(
+                                fontSize = 20.sp, // Tamaño ajustado
+                                fontWeight = FontWeight.Bold, // Día en negrita
+                                lineHeight = 20.sp // Elimina espacio adicional
+                            ),
+                            maxLines = 1 // Asegura que el texto esté en una sola línea
+                        )
+                        Text(
+                            text = concert.date.formatDayOfWeek(),
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 10.sp, // Tamaño pequeño para que encaje
+                                color = Color.Gray, // Color gris
+                                lineHeight = 10.sp // Elimina espacio adicional
+                            ),
+                            modifier = Modifier.padding(top = 0.dp), // Casi sin espacio entre textos
+                            maxLines = 1 // Asegura que el texto esté en una sola línea
+                        )
+                    }
+                }
+
+                // Subtarjeta 2: Título y Precio
+                Card(
+                    modifier = Modifier
+                        .weight(1f),
+                    shape = RoundedCornerShape(8.dp), // Bordes redondeados
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Sin elevación
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent) // Fondo transparente
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxHeight().padding(5.dp), // Asegura que la columna ocupe toda la altura disponible
+                        verticalArrangement = Arrangement.Center // Centra verticalmente los elementos dentro de la columna
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Título del concierto
+                            Text(
+                                text = concert.name,
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold // Negrita
+                                ),
+                                modifier = Modifier.weight(1f) // Ocupa el espacio restante
+                            )
+
+                            // Precio
+                            Text(
+                                text = "${transaction["amount"]} Bs.",
+                                style = MaterialTheme.typography.bodyMedium.copy(color = Color.White), // Precio en blanco
+                                textAlign = TextAlign.End
+                            )
+                        }
+
+                        // Hora
+                        Text(
+                            text = "19:00 - 22:00",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
         }
     }
 }
+
+
+
+
+
+// Funciones de extensión para formatear fecha
+fun String.formatMonth(): String {
+    val sdf = SimpleDateFormat("MMMM", Locale.getDefault())
+    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(this)
+    return sdf.format(date ?: "").replaceFirstChar { it.uppercase() }
+}
+
+fun String.formatDay(): String {
+    val sdf = SimpleDateFormat("d", Locale.getDefault())
+    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(this)
+    return sdf.format(date ?: "")
+}
+
+fun String.formatDayOfWeek(): String {
+    val sdf = SimpleDateFormat("EEEE", Locale.getDefault())
+    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(this)
+    val fullDayOfWeek = sdf.format(date ?: "").replaceFirstChar { it.uppercase() }
+    return fullDayOfWeek.take(4) // Tomar solo las primeras 4 letras
+}
+
+
+
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
