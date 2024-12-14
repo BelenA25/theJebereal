@@ -111,7 +111,7 @@ fun ConcertTicketItem(
             // Subtarjeta 2: Título y Precio
             Card(
                 modifier = Modifier
-                    .weight(1f),
+                    .weight(1f).padding(start = 8.dp),
                 shape = RoundedCornerShape(8.dp), // Bordes redondeados
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Sin elevación
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent) // Fondo transparente
@@ -137,7 +137,10 @@ fun ConcertTicketItem(
                         // Precio
                         Text(
                             text = "${transaction["amount"]} Bs.",
-                            style = MaterialTheme.typography.bodyMedium.copy(color = Color.White), // Precio en blanco
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold // Poner en negrita
+                            ),
                             textAlign = TextAlign.End
                         )
                     }
