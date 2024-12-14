@@ -70,9 +70,13 @@ import com.google.firebase.database.ktx.getValue
 import kotlinx.coroutines.tasks.await
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import coil.compose.rememberImagePainter
+import com.jebereal.jeberealapp.R
 import com.jebereal.jeberealapp.util.showNotification
 import java.text.SimpleDateFormat
 import java.util.*
@@ -766,6 +770,8 @@ fun TicketOptionsScreen(
 
     }
 }
+
+
 @Composable
 fun PaymentScreen(totalAmount: Double, onPay: () -> Unit) {
     var cardNumber by remember { mutableStateOf("") }
@@ -857,6 +863,7 @@ fun TicketPurchaseScreen(
         }
     }
 
+    // Aquí aplicamos el degradado de fondo al Scaffold en general
     Scaffold(
         topBar = {
             TopAppBar(
@@ -865,24 +872,70 @@ fun TicketPurchaseScreen(
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent // Hacemos el fondo del TopAppBar transparente
+                ),
+                modifier = Modifier.background(Color.Transparent) // Asegura que el TopAppBar no tenga fondo
             )
-        }
+        },
+        containerColor = Color.Transparent, // Fondo transparente para el Scaffold
+        modifier = Modifier.background( // Aplica el degradado al fondo general del Scaffold
+            Brush.linearGradient(
+                colors = listOf(Color(0xFF6F4F28), Color.White) // Degradado de café a blanco
+            )
+        )
     ) { padding ->
         if (userTransactions.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding),
+                    .padding(padding)
+                    .background(Color.Transparent), // Degradado café a blanco
                 contentAlignment = Alignment.Center
             ) {
-                Text("No tickets purchased", style = MaterialTheme.typography.bodyLarge)
+                // Imagen centrada en la parte superior
+                Image(
+                    painter = painterResource(id = R.drawable.no_tickets_purchased), // Reemplaza con el nombre de tu archivo PNG
+                    contentDescription = "Imagen",
+                    modifier = Modifier
+                        .align(Alignment.TopCenter) // Centra la imagen en la parte superior
+                        .size(400.dp) // Tamaño de la imagen (ajústalo según tus necesidades)
+                )
+
+                // Coloca el texto debajo de la imagen
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally, // Centra los textos horizontalmente
+                    verticalArrangement = Arrangement.Center // Centra los textos verticalmente
+                ) {
+                    Text(
+                        "No tickets purchased",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Bold, // Texto en negrita
+                            fontSize = 24.sp // Tamaño de texto más grande
+                        ),
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+                    Text(
+                        "It looks like you haven't bought any tickets yet, don't you want to buy one?",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Normal, // Texto normal
+                            fontSize = 16.sp, // Tamaño de texto más pequeño
+                            textAlign = TextAlign.Center
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth() // Permite que el texto ocupe todo el ancho disponible
+                            .padding(start = 30.dp, end = 30.dp, top = 15.dp) // Padding a los costados y arriba
+
+                    )
+                }
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .background(Brush.linearGradient(colors = listOf(Color(0xFF6F4F28), Color.White))) // Degradado café a blanco
             ) {
                 items(userConcerts) { concert ->
                     val concertTransactions = userTransactions.filter {
@@ -901,6 +954,11 @@ fun TicketPurchaseScreen(
         }
     }
 }
+
+
+
+
+
 
 @Composable
 fun ConcertTicketItem(
