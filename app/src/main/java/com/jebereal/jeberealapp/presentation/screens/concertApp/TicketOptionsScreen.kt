@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -122,10 +123,12 @@ fun TicketOptionsScreen(
                                     .fillMaxWidth()
                                     .height(100.dp) // Altura más pequeña para cada tarjeta
                                     .clickable {
-                                        selectedTickets = if (selectedTickets.contains(ticket)) {
-                                            selectedTickets.filter { it != ticket }
-                                        } else {
-                                            selectedTickets + ticket
+                                        if (ticket.available) { // Solo permite selección si está disponible
+                                            selectedTickets = if (selectedTickets.contains(ticket)) {
+                                                selectedTickets.filter { it != ticket }
+                                            } else {
+                                                selectedTickets + ticket
+                                            }
                                         }
                                     },
                                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Sin fondo ni sombra
@@ -155,7 +158,7 @@ fun TicketOptionsScreen(
                                             .width(IntrinsicSize.Min) // Ajuste automático de ancho
                                     ) {
                                         val circleColors = listOf(
-                                            Color(0xFFF44336), // Rojo, // Naranja
+                                            Color(0xFFF44336), // Rojo
                                             Color(0xFF9C27B0),  // Morado
                                             Color(0xFF4CAF50), // Verde
                                             Color(0xFF2196F3)  // Azul
@@ -172,18 +175,30 @@ fun TicketOptionsScreen(
                                             tint = Color.White // Ícono blanco
                                         )
 
-                                        // Checkbox debajo del ícono
-                                        Checkbox(
-                                            checked = selectedTickets.contains(ticket),
-                                            onCheckedChange = {
-                                                selectedTickets = if (it) {
-                                                    selectedTickets + ticket
-                                                } else {
-                                                    selectedTickets.filter { t -> t != ticket }
-                                                }
-                                            },
-                                            modifier = Modifier.padding(top = 8.dp) // Separación entre ícono y checkbox
-                                        )
+                                        // Mostrar el checkbox solo si el ticket está disponible
+                                        if (ticket.available) {
+                                            Checkbox(
+                                                checked = selectedTickets.contains(ticket),
+                                                onCheckedChange = {
+                                                    selectedTickets = if (it) {
+                                                        selectedTickets + ticket
+                                                    } else {
+                                                        selectedTickets.filter { t -> t != ticket }
+                                                    }
+                                                },
+                                                modifier = Modifier.padding(top = 8.dp) // Separación entre ícono y checkbox
+                                            )
+                                        } else {
+                                            // Si no está disponible, mostrar "agotado"
+                                            Text(
+                                                text = "Agotado",
+                                                style = MaterialTheme.typography.bodyMedium.copy(
+                                                    color = Color.Red,
+                                                    fontWeight = FontWeight.Bold
+                                                ),
+                                                modifier = Modifier.padding(top = 8.dp)
+                                            )
+                                        }
                                     }
 
                                     // Subcard 3: Información del ticket (con separación)
@@ -196,10 +211,13 @@ fun TicketOptionsScreen(
                                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.ExtraBold)
                                         )
 
-                                        Text(
-                                            text = "Asiento ${ticket.seatNumber} - Fila ${ticket.row}",
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
+                                        // Solo mostrar la fila y el asiento si está disponible, si no, mostrar "agotado"
+                                        if (ticket.available) {
+                                            Text(
+                                                text = "Asiento ${ticket.seatNumber} - Fila ${ticket.row}",
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        }
 
                                         Text(
                                             text = "${ticket.price} Bs.",
@@ -302,10 +320,10 @@ fun TicketOptionsScreen(
                     }
                 }
             }
-
         }
     }
 }
+
 
 
 

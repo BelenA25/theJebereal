@@ -1,5 +1,6 @@
 package com.jebereal.jeberealapp.util
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -9,6 +10,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 
+@SuppressLint("MissingPermission")
 fun showNotification(context: Context) {
     // Create NotificationChannel for Android 8.0+ (API 26+)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
