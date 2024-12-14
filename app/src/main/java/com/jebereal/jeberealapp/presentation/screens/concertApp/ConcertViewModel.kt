@@ -37,7 +37,7 @@ import javax.inject.Inject
         }
     }*/
 
-    // ViewModel with Hilt
+
     @HiltViewModel
     class ConcertViewModel @Inject constructor(
         private val api: ConcertApi
