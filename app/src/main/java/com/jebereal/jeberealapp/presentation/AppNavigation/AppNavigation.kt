@@ -14,15 +14,16 @@ import androidx.navigation.navArgument
 import com.jebereal.jeberealapp.BottomNavigationBar
 
 import com.jebereal.jeberealapp.NavigationItem
-import com.jebereal.jeberealapp.concertApp.ConcertApp
-import com.jebereal.jeberealapp.concertApp.ConcertDetailScreen
-import com.jebereal.jeberealapp.concertApp.FirebaseConcertApi
+import com.jebereal.jeberealapp.presentation.screens.concertApp.ConcertApp
+import com.jebereal.jeberealapp.presentation.screens.concertApp.ConcertDetailScreen
+import com.jebereal.jeberealapp.presentation.screens.concertApp.ConcertViewModel
+//import com.jebereal.jeberealapp.concertApp.FirebaseConcertApi
 
-import com.jebereal.jeberealapp.concertApp.PaymentScreen
-import com.jebereal.jeberealapp.concertApp.PurchasedTicketsDetailScreen
-import com.jebereal.jeberealapp.concertApp.SearchScreen
-import com.jebereal.jeberealapp.concertApp.TicketOptionsScreen
-import com.jebereal.jeberealapp.concertApp.TicketPurchaseScreen
+import com.jebereal.jeberealapp.presentation.screens.concertApp.PaymentScreen
+import com.jebereal.jeberealapp.presentation.screens.concertApp.PurchasedTicketsDetailScreen
+import com.jebereal.jeberealapp.presentation.screens.concertApp.SearchScreen
+import com.jebereal.jeberealapp.presentation.screens.concertApp.TicketOptionsScreen
+import com.jebereal.jeberealapp.presentation.screens.concertApp.TicketPurchaseScreen
 import com.jebereal.jeberealapp.presentation.screens.PaginaPrincipal.WelcomeScreen
 import com.jebereal.jeberealapp.presentation.screens.login.LoginScreen
 import com.jebereal.jeberealapp.presentation.screens.login.LoginViewModel
@@ -97,7 +98,7 @@ fun ProfileScreenNav(navController: NavHostController) {
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
-    val viewModelConcert: FirebaseConcertApi.ConcertViewModel = hiltViewModel()
+    val viewModelConcert: ConcertViewModel = hiltViewModel()
     val loginViewModel: LoginViewModel = hiltViewModel()
     val currentUser = loginViewModel.currentUser
 

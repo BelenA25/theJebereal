@@ -1,7 +1,7 @@
 package com.jebereal.jeberealapp.di
 
-import com.jebereal.jeberealapp.concertApp.ConcertApi
-import com.jebereal.jeberealapp.concertApp.FirebaseConcertApi
+//import com.jebereal.jeberealapp.concertApp.ConcertApi
+//import com.jebereal.jeberealapp.concertApp.FirebaseConcertApi
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -24,6 +24,8 @@ import com.jebereal.jeberealapp.domain.use_cases.users.Update
 import com.jebereal.jeberealapp.domain.use_cases.users.UsersUseCases
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
+import com.jebereal.jeberealapp.data.repository.FirebaseConcertApi
+import com.jebereal.jeberealapp.domain.repository.ConcertApi
 import com.login.jetpackcompose.core.Constants.USERS
 import dagger.Binds
 
