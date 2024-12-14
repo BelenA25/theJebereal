@@ -1,4 +1,4 @@
-package com.jebereal.jeberealapp.concertApp
+package com.jebereal.jeberealapp.presentation.screens.concertApp
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -53,11 +53,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.jebereal.jeberealapp.core.Concert
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
-    viewModel: FirebaseConcertApi.ConcertViewModel = hiltViewModel(),
+    viewModel: ConcertViewModel = hiltViewModel(),
     navController: NavHostController
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -143,7 +144,7 @@ fun SearchScreen(
 // Extraer el contenido de ConcertApp en un componente separado para reutilización
 @Composable
 fun ConcertAppContent(
-    viewModel: FirebaseConcertApi.ConcertViewModel,
+    viewModel: ConcertViewModel,
     navController: NavHostController
 ) {
     val popularConcerts by viewModel.popularConcerts.collectAsState()
