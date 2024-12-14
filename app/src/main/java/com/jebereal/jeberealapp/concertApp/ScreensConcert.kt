@@ -1018,7 +1018,7 @@ fun ConcertTicketItem(
         colors = CardDefaults.cardColors(containerColor = Color.Transparent) // Transparente
     ) {
             // Subcard 1 ancho reducido
-            val subCard1Width = 90.dp // Ancho fijo para la subcard 1
+            val subCard1Width = 130.dp // Ancho fijo para la subcard 1
             // Mes centrado encima de la subcard 1 y alineado a la izquierda
             Box(
                 modifier = Modifier
@@ -1030,7 +1030,7 @@ fun ConcertTicketItem(
                     text = concert.date.formatMonth(),
                     style = TextStyle(
                         color = Color.White,
-                        fontSize = 15.sp, // Más pequeño
+                        fontSize = 18.sp, // Más pequeño
                         fontWeight = FontWeight.Normal // Sin negrita
                     ),
                     textAlign = TextAlign.Start, // Alineado a la izquierda
@@ -1046,8 +1046,8 @@ fun ConcertTicketItem(
                 // Subtarjeta 1: Día y día de la semana
                 Card(
                     modifier = Modifier
-                        .width(56.dp)
-                        .height(60.dp) // Asegura suficiente altura para los textos
+                        .width(60.dp)
+                        .height(65.dp) // Asegura suficiente altura para los textos
                         .padding(end = 8.dp), // Espacio entre las subcards
                     shape = RoundedCornerShape(8.dp), // Bordes redondeados
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Sin elevación
@@ -1063,7 +1063,7 @@ fun ConcertTicketItem(
                         Text(
                             text = concert.date.formatDay(),
                             style = MaterialTheme.typography.displayMedium.copy(
-                                fontSize = 20.sp, // Tamaño ajustado
+                                fontSize = 22.sp, // Tamaño ajustado
                                 fontWeight = FontWeight.Bold, // Día en negrita
                                 lineHeight = 20.sp // Elimina espacio adicional
                             ),
@@ -1072,7 +1072,7 @@ fun ConcertTicketItem(
                         Text(
                             text = concert.date.formatDayOfWeek(),
                             style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 10.sp, // Tamaño pequeño para que encaje
+                                fontSize = 12.sp, // Tamaño pequeño para que encaje
                                 color = Color.Gray, // Color gris
                                 lineHeight = 10.sp // Elimina espacio adicional
                             ),
@@ -1085,10 +1085,11 @@ fun ConcertTicketItem(
                 // Subtarjeta 2: Título y Precio
                 Card(
                     modifier = Modifier
-                        .weight(1f),
+                        .weight(1f).padding(start = 5.dp),
                     shape = RoundedCornerShape(8.dp), // Bordes redondeados
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Sin elevación
                     colors = CardDefaults.cardColors(containerColor = Color.Transparent) // Fondo transparente
+
                 ) {
                     Column(
                         modifier = Modifier.fillMaxHeight().padding(5.dp), // Asegura que la columna ocupe toda la altura disponible
@@ -1102,7 +1103,7 @@ fun ConcertTicketItem(
                             Text(
                                 text = concert.name,
                                 style = MaterialTheme.typography.titleLarge.copy(
-                                    fontSize = 15.sp,
+                                    fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold // Negrita
                                 ),
                                 modifier = Modifier.weight(1f) // Ocupa el espacio restante
@@ -1111,7 +1112,10 @@ fun ConcertTicketItem(
                             // Precio
                             Text(
                                 text = "${transaction["amount"]} Bs.",
-                                style = MaterialTheme.typography.bodyMedium.copy(color = Color.White), // Precio en blanco
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = Color.White,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold), // Precio en blanco
                                 textAlign = TextAlign.End
                             )
                         }
@@ -1119,7 +1123,7 @@ fun ConcertTicketItem(
                         // Hora
                         Text(
                             text = "19:00 - 22:00",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp)
                         )
                     }
                 }
