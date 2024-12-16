@@ -30,8 +30,8 @@ fun showNotification(context: Context) {
 
     // Create the notification
     val notification = NotificationCompat.Builder(context, "default_channel")
-        .setContentTitle("New Notification")
-        .setContentText("This is a simple notification with an icon.")
+        .setContentTitle("Compra exitosa!")
+        .setContentText("Se realizo correctamente la compra de entradas")
         .setSmallIcon(android.R.drawable.ic_dialog_info) // Set your icon here
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .setAutoCancel(true) // Automatically dismiss after user taps
